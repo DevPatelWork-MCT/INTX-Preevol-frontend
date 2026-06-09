@@ -13,7 +13,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { IconLayoutRows, IconWaveSine, IconCommand, IconFrame, IconChartPie, IconMap, IconFileInvoice, IconChartBar, IconShoppingCart, IconCategory, IconWarehouse, IconUserPlus, IconLogout } from "@tabler/icons-react"
+import { IconLayoutRows, IconWaveSine, IconCommand, IconFrame, IconChartPie, IconMap, IconFileInvoice, IconChartBar, IconShoppingCart, IconCategory, IconBox, IconUserPlus, IconLogout } from "@tabler/icons-react"
 
 // This is sample data.
 const data = {
@@ -93,7 +93,7 @@ const data = {
     {
       title: "Inventory",
       url: "#",
-      icon: <IconWarehouse />, // inventory icon
+      icon: <IconBox />, // inventory icon
       items: [
         { title: "Type", url: "#" },
         { title: "Model", url: "#" },
