@@ -5,18 +5,36 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 First, run the development server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+## Running as Desktop App with Electron
+
+This project now supports running as a desktop application using Electron:
+
+### Development Mode
+```bash
+bun run electron-dev
+```
+
+This will start the Next.js development server and launch Electron in the background.
+
+### Build for Production
+```bash
+bun run dist
+```
+
+This will build the Next.js app and package it as a desktop application using electron-builder.
+
+### Manual Build Steps
+1. Build the Next.js app: `bun run build`
+2. Run Electron: `bun run electron`
+
+The desktop app will be built in the `dist/` directory.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
