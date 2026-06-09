@@ -13,7 +13,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { IconLayoutRows, IconWaveSine, IconCommand, IconTerminal2, IconRobot, IconBook, IconSettings, IconFrame, IconChartPie, IconMap } from "@tabler/icons-react"
+import { IconLayoutRows, IconWaveSine, IconCommand, IconFrame, IconChartPie, IconMap, IconFileInvoice, IconChartBar, IconShoppingCart, IconCategory, IconWarehouse, IconUserPlus, IconLogout } from "@tabler/icons-react"
 
 // This is sample data.
 const data = {
@@ -49,101 +49,74 @@ const data = {
     },
   ],
   navMain: [
+    // New sections added per user request
     {
-      title: "Playground",
+      title: "Quotation",
       url: "#",
-      icon: (
-        <IconTerminal2
-        />
-      ),
-      isActive: true,
+      icon: <IconFileInvoice />, // quotation icon
+      items: [],
+    },
+    {
+      title: "Sales",
+      url: "#",
+      icon: <IconChartBar />, // sales icon
       items: [
-        {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
+        { title: "Profoma Invoice", url: "#" },
+        { title: "Client", url: "#" },
+        { title: "Invoice", url: "#" },
+        { title: "Report", url: "#" },
       ],
     },
     {
-      title: "Models",
+      title: "Purchase",
       url: "#",
-      icon: (
-        <IconRobot
-        />
-      ),
+      icon: <IconShoppingCart />, // purchase icon
       items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
+        { title: "Vendor", url: "#" },
+        { title: "Purchase Product", url: "#" },
+        { title: "Purchase Order", url: "#" },
+        { title: "Work Order", url: "#" },
       ],
     },
     {
-      title: "Documentation",
+      title: "Masters",
       url: "#",
-      icon: (
-        <IconBook
-        />
-      ),
+      icon: <IconCategory />, // masters icon
       items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
+        { title: "Category", url: "#" },
+        { title: "Sub Category", url: "#" },
+        { title: "Product", url: "#" },
+        { title: "Company Profile", url: "#" },
+        { title: "Bank", url: "#" },
       ],
     },
     {
-      title: "Settings",
+      title: "Inventory",
       url: "#",
-      icon: (
-        <IconSettings
-        />
-      ),
+      icon: <IconWarehouse />, // inventory icon
       items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
+        { title: "Type", url: "#" },
+        { title: "Model", url: "#" },
+        { title: "Plunger Diameter", url: "#" },
+        { title: "Goods", url: "#" },
+        { title: "Inventory", url: "#" },
+        { title: "Stock Report", url: "#" },
+      ],
+    },
+    {
+      title: "User Create",
+      url: "#",
+      icon: <IconUserPlus />, // user create icon
+      items: [],
+    },
+    {
+      title: "Close",
+      url: "#",
+      icon: <IconLogout />, // close icon
+      items: [
+        { title: "Change Company", url: "#" },
+        { title: "Backup", url: "#" },
+        { title: "Exit", url: "#" },
       ],
     },
   ],
