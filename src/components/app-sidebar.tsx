@@ -13,10 +13,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { IconLayoutRows, IconWaveSine, IconCommand, IconFrame, IconChartPie, IconMap, IconFileInvoice, IconChartBar, IconShoppingCart, IconCategory, IconUserPlus, IconLogout, IconBox } from "@tabler/icons-react"
-
-// Theme toggle component
-import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { IconLayoutRows, IconWaveSine, IconCommand, IconFrame, IconChartPie, IconMap, IconFileInvoice, IconChartBar, IconShoppingCart, IconCategory, IconWarehouse, IconUserPlus, IconLogout } from "@tabler/icons-react"
 
 // This is sample data.
 const data = {
@@ -96,7 +93,7 @@ const data = {
     {
       title: "Inventory",
       url: "#",
-      icon: <IconBox />, // inventory icon
+      icon: <IconWarehouse />, // inventory icon
       items: [
         { title: "Type", url: "#" },
         { title: "Model", url: "#" },
@@ -162,8 +159,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
-        {/* Theme toggle */}
-        <ThemeToggle />
         <NavUser user={data.user} />
       </SidebarFooter>
       <SidebarRail />
