@@ -83,11 +83,12 @@ const data = {
       url: "#",
       icon: <IconCategory />, // masters icon
       items: [
-        { title: "Category", url: "#" },
-        { title: "Sub Category", url: "#" },
-        { title: "Product", url: "#" },
-        { title: "Company Profile", url: "#" },
-        { title: "Bank", url: "#" },
+          { title: "Category", url: "#" },
+          { title: "Sub Category", url: "#" },
+          { title: "Product", url: "#" },
+          { title: "Company", url: "/masters/company" },
+          { title: "Party", url: "/masters/party" },
+          { title: "Bank", url: "/masters/bank" },
       ],
     },
     {
