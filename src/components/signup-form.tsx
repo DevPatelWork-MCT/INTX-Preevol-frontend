@@ -8,13 +8,37 @@ import {
   FieldSeparator,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { useAuthApi } from "@/hooks/useAuthApi"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
+  const { signUp, loading, error } = useAuthApi()
+  const router = useRouter()
+  const [apiError, setApiError] = useState<string | null>(null)
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    const payload = {
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+      firstName: formData.get("name") as string,
+    }
+    try {
+      await signUp(payload)
+      router.push("/dashboard")
+    } catch (err: any) {
+      setApiError(err.message ?? "Signup failed")
+    }
+  }
+
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props}>
+    <form className={cn("flex flex-col gap-6", className)} onSubmit={handleSubmit} {...props}>
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Create your account</h1>
@@ -26,16 +50,24 @@ export function SignupForm({
           <FieldLabel htmlFor="name">Full Name</FieldLabel>
           <Input
             id="name"
+            name="name"
             type="text"
             placeholder="John Doe"
             required
             className="bg-background"
           />
-        </Field>
+        {apiError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{apiError}</AlertDescription>
+          </Alert>
+        )}
         <Field>
-          <FieldLabel htmlFor="email">Email</FieldLabel>
+          <Button type="submit" disabled={loading}>Create Account</Button>
+        </Field>
           <Input
             id="email"
+            name="email"
             type="email"
             placeholder="m@example.com"
             required
@@ -50,6 +82,7 @@ export function SignupForm({
           <FieldLabel htmlFor="password">Password</FieldLabel>
           <Input
             id="password"
+            name="password"
             type="password"
             required
             className="bg-background"
