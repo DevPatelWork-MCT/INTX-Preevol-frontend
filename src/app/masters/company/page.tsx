@@ -128,91 +128,93 @@ export default function CompanyPage() {
   }
 
   return (
-    <SidebarProvider
-      style={
-        {
-          "--sidebar-width": "calc(var(--spacing) * 72)",
-          "--header-height": "calc(var(--spacing) * 12)",
-        } as React.CSSProperties
-      }
-    >
-      <AppSidebar />
-      <SidebarInset>
-        <SiteHeader />
+    <>
+      <SidebarProvider
+        style={
+          {
+            "--sidebar-width": "calc(var(--spacing) * 72)",
+            "--header-height": "calc(var(--spacing) * 12)",
+          } as React.CSSProperties
+        }
+      >
+        <AppSidebar />
+        <SidebarInset>
+          <SiteHeader />
 
-        <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-2">
-            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-              {/* Header card */}
-              <Card className="mx-4 lg:mx-6">
-                <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div>
-                    <CardTitle className="text-xl">Companies</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Manage your company masters
-                    </p>
-                  </div>
-                  <Button asChild>
-                    <a href="/masters/company/create">Add Company</a>
-                  </Button>
-                </CardHeader>
-              </Card>
-
-              {/* Error banner */}
-              {(apiError || error) && (
-                <div className="mx-4 lg:mx-6">
-                  <Alert variant="destructive" className="relative">
-                    <AlertTitle>Error</AlertTitle>
-                    <AlertDescription>
-                      {apiError ?? error?.message}
-                    </AlertDescription>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-2 right-2"
-                      onClick={() => setApiError(null)}
-                    >
-                      ✕
+          <div className="flex flex-1 flex-col">
+            <div className="@container/main flex flex-1 flex-col gap-2">
+              <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+                {/* Header card */}
+                <Card className="mx-4 lg:mx-6">
+                  <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                      <CardTitle className="text-xl">Companies</CardTitle>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Manage your company masters
+                      </p>
+                    </div>
+                    <Button asChild>
+                      <a href="/masters/company/create">Add Company</a>
                     </Button>
-                  </Alert>
-                </div>
-              )}
+                  </CardHeader>
+                </Card>
 
-              {/* Loading indicator */}
-              {loading && (
-                <div className="mx-4 lg:mx-6">
-                  <p className="text-muted-foreground text-sm">Loading companies…</p>
-                </div>
-              )}
+                {/* Error banner */}
+                {(apiError || error) && (
+                  <div className="mx-4 lg:mx-6">
+                    <Alert variant="destructive" className="relative">
+                      <AlertTitle>Error</AlertTitle>
+                      <AlertDescription>
+                        {apiError ?? error?.message}
+                      </AlertDescription>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={() => setApiError(null)}
+                      >
+                        ✕
+                      </Button>
+                    </Alert>
+                  </div>
+                )}
 
-              {/* Data table card */}
-              <Card className="mx-4 lg:mx-6">
-                <CardContent className="p-0">
-                  <CompanyDataTable
-                    data={companies}
-                    pagination={pagination}
-                    onPageChange={handlePageChange}
-                    onPageSizeChange={handlePageSizeChange}
-                    onSearchChange={handleSearchChange}
-                    onDelete={handleDelete}
-                    onEdit={handleEdit}
-                    onAddFinancialYear={handleAddFinancialYear}
-                    onViewFinancialYears={handleViewFinancialYears}
-                  />
-                </CardContent>
-              </Card>
+                {/* Loading indicator */}
+                {loading && (
+                  <div className="mx-4 lg:mx-6">
+                    <p className="text-muted-foreground text-sm">Loading companies…</p>
+                  </div>
+                )}
+
+                {/* Data table card */}
+                <Card className="mx-4 lg:mx-6">
+                  <CardContent className="p-0">
+                    <CompanyDataTable
+                      data={companies}
+                      pagination={pagination}
+                      onPageChange={handlePageChange}
+                      onPageSizeChange={handlePageSizeChange}
+                      onSearchChange={handleSearchChange}
+                      onDelete={handleDelete}
+                      onEdit={handleEdit}
+                      onAddFinancialYear={handleAddFinancialYear}
+                      onViewFinancialYears={handleViewFinancialYears}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+        </SidebarInset>
+      </SidebarProvider>
 
-    {/* Financial Year Dialog */}
-    <FinancialYearDialog
-      company={fyDialogCompany}
-      open={fyDialogOpen}
-      onClose={() => setFyDialogOpen(false)}
-      onRefresh={handleFinancialYearRefresh}
-    />
+      {/* Financial Year Dialog */}
+      <FinancialYearDialog
+        company={fyDialogCompany}
+        open={fyDialogOpen}
+        onClose={() => setFyDialogOpen(false)}
+        onRefresh={handleFinancialYearRefresh}
+      />
+    </>
   )
 }

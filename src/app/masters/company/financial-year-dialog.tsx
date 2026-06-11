@@ -21,6 +21,7 @@ import {
   IconPencil,
   IconBuilding,
   IconLoader,
+  IconX,
 } from "@tabler/icons-react"
 import { useFinancialApi, type FinancialYearRow } from "@/hooks/useFinancialApi"
 import type { CompanyRow } from "@/components/company-data-table"
@@ -30,6 +31,18 @@ interface FinancialYearDialogProps {
   open: boolean
   onClose: () => void
   onRefresh?: () => void
+}
+
+const emptyForm = {
+  year: "",
+  startDate: "",
+  endDate: "",
+  salesCount: "",
+  serviceCount: "",
+  proformaSalesCount: "",
+  proformaServiceCount: "",
+  quotationCount: "",
+  proposalCount: "",
 }
 
 export function FinancialYearDialog({
@@ -43,12 +56,32 @@ export function FinancialYearDialog({
   const [showAddForm, setShowAddForm] = React.useState(false)
   const [editingId, setEditingId] = React.useState<number | null>(null)
 
-  // Form state
-  const [fyYear, setFyYear] = React.useState("")
-  const [fyStartDate, setFyStartDate] = React.useState("")
-  const [fyEndDate, setFyEndDate] = React.useState("")
-  const [fySalesCount, setFySalesCount] = React.useState("")
-  const [fyServiceCount, setFyServiceCount] = React.useState("")
+  // Form state — all 9 fields from DB schema
+  const [form, setForm] = React.useState({ ...emptyForm })
+
+  const set = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((prev) => ({ ...prev, [field]: e.target.value }))
+  }
+
+  // Auto-generate year label from start/end dates (e.g. 01-04-2026 → 31-03-2027 = "26-27")
+  React.useEffect(() => {
+    if (form.startDate && form.endDate) {
+      const start = new Date(form.startDate)
+      const end = new Date(form.endDate)
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        const startYY = String(start.getFullYear()).slice(-2)
+        const endYY = String(end.getFullYear()).slice(-2)
+        const label = `${startYY}-${endYY}`
+        setForm((prev) => {
+          // Only auto-fill if user hasn't manually typed a year label
+          if (!prev.year || prev.year === `${startYY}-${endYY}` || /^\d{2}-\d{2}$/.test(prev.year)) {
+            return { ...prev, year: label }
+          }
+          return prev
+        })
+      }
+    }
+  }, [form.startDate, form.endDate])
 
   // Load financial years when dialog opens
   React.useEffect(() => {
@@ -67,31 +100,42 @@ export function FinancialYearDialog({
     }
   }, [open, company, listFinancialYears])
 
-  const resetForm = () => {
-    setFyYear("")
-    setFyStartDate("")
-    setFyEndDate("")
-    setFySalesCount("")
-    setFyServiceCount("")
+  const resetForm = () => setForm({ ...emptyForm })
+
+  const loadForm = (fy: FinancialYearRow) => {
+    setForm({
+      year: fy.FinancialYear,
+      startDate: fy.StartDate ? fy.StartDate.slice(0, 10) : "",
+      endDate: fy.EndDate ? fy.EndDate.slice(0, 10) : "",
+      salesCount: fy.SalesInvoiceCount ?? "",
+      serviceCount: fy.ServiceInvoiceCount ?? "",
+      proformaSalesCount: fy.ProformaSalesInvoiceCount ?? "",
+      proformaServiceCount: fy.ProformaServiceInvoiceCount ?? "",
+      quotationCount: fy.QuotationCount ?? "",
+      proposalCount: fy.ProposalCount ?? "",
+    })
   }
 
   const handleAdd = async () => {
-    if (!company || !fyYear || !fyStartDate || !fyEndDate) {
-      toast.error("Please fill in all required fields")
+    if (!company || !form.year || !form.startDate || !form.endDate) {
+      toast.error("Please fill in Year Label, Start Date, and End Date")
       return
     }
     try {
       await createFinancialYear(company.CompanyID, {
-        FinancialYear: fyYear,
-        StartDate: new Date(fyStartDate).toISOString(),
-        EndDate: new Date(fyEndDate).toISOString(),
-        SalesInvoiceCount: fySalesCount || undefined,
-        ServiceInvoiceCount: fyServiceCount || undefined,
+        FinancialYear: form.year,
+        StartDate: new Date(form.startDate).toISOString(),
+        EndDate: new Date(form.endDate).toISOString(),
+        SalesInvoiceCount: form.salesCount || undefined,
+        ServiceInvoiceCount: form.serviceCount || undefined,
+        ProformaSalesInvoiceCount: form.proformaSalesCount || undefined,
+        ProformaServiceInvoiceCount: form.proformaServiceCount || undefined,
+        QuotationCount: form.quotationCount || undefined,
+        ProposalCount: form.proposalCount || undefined,
       })
       toast.success("Financial year added")
       resetForm()
       setShowAddForm(false)
-      // Reload
       const res = await listFinancialYears(company.CompanyID)
       setFinancialYears(Array.isArray(res?.data) ? res.data : [])
       onRefresh?.()
@@ -103,14 +147,17 @@ export function FinancialYearDialog({
   const handleUpdate = async (fyId: number) => {
     if (!company) return
     try {
-      const updates: Record<string, string> = {}
-      if (fyYear) updates.FinancialYear = fyYear
-      if (fyStartDate) updates.StartDate = new Date(fyStartDate).toISOString()
-      if (fyEndDate) updates.EndDate = new Date(fyEndDate).toISOString()
-      if (fySalesCount) updates.SalesInvoiceCount = fySalesCount
-      if (fyServiceCount) updates.ServiceInvoiceCount = fyServiceCount
-
-      await updateFinancialYear(company.CompanyID, fyId, updates)
+      await updateFinancialYear(company.CompanyID, fyId, {
+        FinancialYear: form.year || undefined,
+        StartDate: form.startDate ? new Date(form.startDate).toISOString() : undefined,
+        EndDate: form.endDate ? new Date(form.endDate).toISOString() : undefined,
+        SalesInvoiceCount: form.salesCount || undefined,
+        ServiceInvoiceCount: form.serviceCount || undefined,
+        ProformaSalesInvoiceCount: form.proformaSalesCount || undefined,
+        ProformaServiceInvoiceCount: form.proformaServiceCount || undefined,
+        QuotationCount: form.quotationCount || undefined,
+        ProposalCount: form.proposalCount || undefined,
+      })
       toast.success("Financial year updated")
       setEditingId(null)
       resetForm()
@@ -137,11 +184,7 @@ export function FinancialYearDialog({
 
   const startEdit = (fy: FinancialYearRow) => {
     setEditingId(fy.FinancialYearID)
-    setFyYear(fy.FinancialYear)
-    setFyStartDate(fy.StartDate ? fy.StartDate.slice(0, 10) : "")
-    setFyEndDate(fy.EndDate ? fy.EndDate.slice(0, 10) : "")
-    setFySalesCount(fy.SalesInvoiceCount ?? "")
-    setFyServiceCount(fy.ServiceInvoiceCount ?? "")
+    loadForm(fy)
     setShowAddForm(false)
   }
 
@@ -149,14 +192,78 @@ export function FinancialYearDialog({
 
   const isActiveFY = (fy: FinancialYearRow) => {
     const now = new Date()
-    const start = new Date(fy.StartDate)
-    const end = new Date(fy.EndDate)
-    return now >= start && now <= end
+    return now >= new Date(fy.StartDate) && now <= new Date(fy.EndDate)
   }
+
+  const fmtDate = (d: string) =>
+    new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+
+  // ── Reusable form fields ────────────────────────────────────────
+  const renderFormFields = (prefix: string) => (
+    <div className="space-y-3">
+      {/* Row 1: Year Label + Start Date */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label htmlFor={`${prefix}-year`} className="text-xs">Year Label * <span className="text-muted-foreground font-normal">(auto from dates)</span></Label>
+          <Input
+            id={`${prefix}-year`}
+            value={form.year}
+            onChange={set("year")}
+            placeholder="Auto-generated"
+            className="h-8 mt-1"
+          />
+        </div>
+        <div>
+          <Label htmlFor={`${prefix}-start`} className="text-xs">Start Date *</Label>
+          <Input id={`${prefix}-start`} type="date" value={form.startDate} onChange={set("startDate")} className="h-8 mt-1" />
+        </div>
+      </div>
+      {/* Row 2: End Date + Sales Count */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label htmlFor={`${prefix}-end`} className="text-xs">End Date *</Label>
+          <Input id={`${prefix}-end`} type="date" value={form.endDate} onChange={set("endDate")} className="h-8 mt-1" />
+        </div>
+        <div>
+          <Label htmlFor={`${prefix}-sales`} className="text-xs">Sales Invoice Count</Label>
+          <Input id={`${prefix}-sales`} value={form.salesCount} onChange={set("salesCount")} placeholder="0" className="h-8 mt-1" />
+        </div>
+      </div>
+      {/* Row 3: Service Count + Proforma Sales Count */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label htmlFor={`${prefix}-service`} className="text-xs">Service Invoice Count</Label>
+          <Input id={`${prefix}-service`} value={form.serviceCount} onChange={set("serviceCount")} placeholder="0" className="h-8 mt-1" />
+        </div>
+        <div>
+          <Label htmlFor={`${prefix}-proforma-sales`} className="text-xs">Proforma Sales Count</Label>
+          <Input id={`${prefix}-proforma-sales`} value={form.proformaSalesCount} onChange={set("proformaSalesCount")} placeholder="0" className="h-8 mt-1" />
+        </div>
+      </div>
+      {/* Row 4: Proforma Service Count + Quotation Count */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label htmlFor={`${prefix}-proforma-service`} className="text-xs">Proforma Service Count</Label>
+          <Input id={`${prefix}-proforma-service`} value={form.proformaServiceCount} onChange={set("proformaServiceCount")} placeholder="0" className="h-8 mt-1" />
+        </div>
+        <div>
+          <Label htmlFor={`${prefix}-quotation`} className="text-xs">Quotation Count</Label>
+          <Input id={`${prefix}-quotation`} value={form.quotationCount} onChange={set("quotationCount")} placeholder="0" className="h-8 mt-1" />
+        </div>
+      </div>
+      {/* Row 5: Proposal Count */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label htmlFor={`${prefix}-proposal`} className="text-xs">Proposal Count</Label>
+          <Input id={`${prefix}-proposal`} value={form.proposalCount} onChange={set("proposalCount")} placeholder="0" className="h-8 mt-1" />
+        </div>
+      </div>
+    </div>
+  )
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <IconBuilding className="h-5 w-5 text-primary" />
@@ -167,8 +274,8 @@ export function FinancialYearDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Existing financial years */}
         <div className="space-y-3">
+          {/* Header row */}
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-medium flex items-center gap-1.5">
               <IconCalendar className="h-4 w-4 text-muted-foreground" />
@@ -202,7 +309,7 @@ export function FinancialYearDialog({
             </div>
           )}
 
-          {/* List of financial years */}
+          {/* List */}
           <div className="space-y-2">
             {financialYears.map((fy) => (
               <div
@@ -210,91 +317,57 @@ export function FinancialYearDialog({
                 className="border rounded-lg p-3 hover:bg-muted/50 transition-colors"
               >
                 {editingId === fy.FinancialYearID ? (
-                  /* Edit form */
                   <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor={`fy-year-${fy.FinancialYearID}`} className="text-xs">Year Label *</Label>
-                        <Input
-                          id={`fy-year-${fy.FinancialYearID}`}
-                          value={fyYear}
-                          onChange={(e) => setFyYear(e.target.value)}
-                          placeholder="e.g. 2025-26"
-                          className="h-8 mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`fy-sales-${fy.FinancialYearID}`} className="text-xs">Sales Count</Label>
-                        <Input
-                          id={`fy-sales-${fy.FinancialYearID}`}
-                          value={fySalesCount}
-                          onChange={(e) => setFySalesCount(e.target.value)}
-                          className="h-8 mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`fy-start-${fy.FinancialYearID}`} className="text-xs">Start Date *</Label>
-                        <Input
-                          id={`fy-start-${fy.FinancialYearID}`}
-                          type="date"
-                          value={fyStartDate}
-                          onChange={(e) => setFyStartDate(e.target.value)}
-                          className="h-8 mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`fy-end-${fy.FinancialYearID}`} className="text-xs">End Date *</Label>
-                        <Input
-                          id={`fy-end-${fy.FinancialYearID}`}
-                          type="date"
-                          value={fyEndDate}
-                          onChange={(e) => setFyEndDate(e.target.value)}
-                          className="h-8 mt-1"
-                        />
-                      </div>
-                    </div>
+                    {renderFormFields(`edit-${fy.FinancialYearID}`)}
                     <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="ghost" onClick={() => { setEditingId(null); resetForm(); }}>
+                      <Button size="sm" variant="ghost" onClick={() => { setEditingId(null); resetForm(); }} className="gap-1">
+                        <IconX className="h-3.5 w-3.5" />
                         Cancel
                       </Button>
                       <Button size="sm" onClick={() => handleUpdate(fy.FinancialYearID)}>
-                        Save
+                        Save Changes
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  /* Display row */
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">{fy.FinancialYear}</span>
-                          {isActiveFY(fy) && (
-                            <Badge variant="default" className="text-[10px] h-4 px-1">Active</Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {new Date(fy.StartDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                          {" → "}
-                          {new Date(fy.EndDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                        </p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-sm">{fy.FinancialYear}</span>
+                        {isActiveFY(fy) && (
+                          <Badge variant="default" className="text-[10px] h-4 px-1">Active</Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {fmtDate(fy.StartDate)} → {fmtDate(fy.EndDate)}
+                      </p>
+                      {/* Count badges */}
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {fy.SalesInvoiceCount && (
+                          <Badge variant="secondary" className="text-[10px] h-4 px-1">Sales: {fy.SalesInvoiceCount}</Badge>
+                        )}
+                        {fy.ServiceInvoiceCount && (
+                          <Badge variant="secondary" className="text-[10px] h-4 px-1">Service: {fy.ServiceInvoiceCount}</Badge>
+                        )}
+                        {fy.ProformaSalesInvoiceCount && (
+                          <Badge variant="secondary" className="text-[10px] h-4 px-1">Proforma Sales: {fy.ProformaSalesInvoiceCount}</Badge>
+                        )}
+                        {fy.ProformaServiceInvoiceCount && (
+                          <Badge variant="secondary" className="text-[10px] h-4 px-1">Proforma Service: {fy.ProformaServiceInvoiceCount}</Badge>
+                        )}
+                        {fy.QuotationCount && (
+                          <Badge variant="secondary" className="text-[10px] h-4 px-1">Quotation: {fy.QuotationCount}</Badge>
+                        )}
+                        {fy.ProposalCount && (
+                          <Badge variant="secondary" className="text-[10px] h-4 px-1">Proposal: {fy.ProposalCount}</Badge>
+                        )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7"
-                        onClick={() => startEdit(fy)}
-                      >
+                    <div className="flex items-center gap-1 shrink-0 ml-2">
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => startEdit(fy)}>
                         <IconPencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={() => handleDelete(fy.FinancialYearID)}
-                      >
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDelete(fy.FinancialYearID)}>
                         <IconTrash className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -311,47 +384,7 @@ export function FinancialYearDialog({
                 <IconCalendarPlus className="h-4 w-4 text-primary" />
                 New Financial Year
               </h5>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="new-fy-year" className="text-xs">Year Label *</Label>
-                  <Input
-                    id="new-fy-year"
-                    value={fyYear}
-                    onChange={(e) => setFyYear(e.target.value)}
-                    placeholder="e.g. 2025-26"
-                    className="h-8 mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="new-fy-sales" className="text-xs">Sales Count</Label>
-                  <Input
-                    id="new-fy-sales"
-                    value={fySalesCount}
-                    onChange={(e) => setFySalesCount(e.target.value)}
-                    className="h-8 mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="new-fy-start" className="text-xs">Start Date *</Label>
-                  <Input
-                    id="new-fy-start"
-                    type="date"
-                    value={fyStartDate}
-                    onChange={(e) => setFyStartDate(e.target.value)}
-                    className="h-8 mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="new-fy-end" className="text-xs">End Date *</Label>
-                  <Input
-                    id="new-fy-end"
-                    type="date"
-                    value={fyEndDate}
-                    onChange={(e) => setFyEndDate(e.target.value)}
-                    className="h-8 mt-1"
-                  />
-                </div>
-              </div>
+              {renderFormFields("new")}
               <div className="flex justify-end gap-2">
                 <Button size="sm" variant="ghost" onClick={() => { setShowAddForm(false); resetForm(); }}>
                   Cancel

@@ -347,7 +347,7 @@ export function CompanyDataTable({
   return (
     <div className="w-full flex-col justify-start gap-6">
       {/* Toolbar */}
-      <div className="flex flex-col gap-3 px-4 pt-4 lg:px-6 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 px-4 pt-4 pb-2 lg:px-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="relative max-w-sm flex-1">
           <Input
             placeholder="Search by name, GSTIN, state…"
@@ -399,7 +399,7 @@ export function CompanyDataTable({
       </div>
 
       {/* Table */}
-      <div className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
+      <div className="relative flex flex-col gap-4 overflow-auto px-4 pt-2 lg:px-6">
         <div className="overflow-hidden rounded-lg border">
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-muted/95 backdrop-blur-sm">

@@ -1,6 +1,16 @@
 import { useState, useCallback } from "react";
 import { apiRequest } from "../lib/apiClient";
 
+export interface CompanyListResponse<T = unknown> {
+  data: T[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
+}
+
 /**
  * Hook for Company related API calls.
  * Adjust the endpoint paths to match your backend routes.
@@ -35,7 +45,7 @@ export function useCompanyApi() {
       if (params?.sortBy) query.set("sortBy", params.sortBy)
       if (params?.sortOrder) query.set("sortOrder", params.sortOrder)
       const qs = query.toString()
-      return handleRequest<unknown>(`/company${qs ? `?${qs}` : ""}`, { method: "GET" })
+      return handleRequest<CompanyListResponse>(`/company${qs ? `?${qs}` : ""}`, { method: "GET" })
     },
     [handleRequest]
   );

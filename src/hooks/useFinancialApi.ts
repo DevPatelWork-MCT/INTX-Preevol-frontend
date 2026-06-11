@@ -29,6 +29,18 @@ export interface CreateFinancialYearPayload {
   ProposalCount?: string
 }
 
+export interface UpdateFinancialYearPayload {
+  FinancialYear?: string
+  StartDate?: string
+  EndDate?: string
+  SalesInvoiceCount?: string
+  ServiceInvoiceCount?: string
+  ProformaSalesInvoiceCount?: string
+  ProformaServiceInvoiceCount?: string
+  QuotationCount?: string
+  ProposalCount?: string
+}
+
 export function useFinancialApi() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
@@ -66,7 +78,7 @@ export function useFinancialApi() {
   )
 
   const updateFinancialYear = useCallback(
-    (companyId: number, financialYearId: number, payload: Partial<CreateFinancialYearPayload>) =>
+    (companyId: number, financialYearId: number, payload: UpdateFinancialYearPayload) =>
       handleRequest<{ data: FinancialYearRow }>(`/company/${companyId}/financial-years/${financialYearId}`, {
         method: "PATCH",
         body: JSON.stringify(payload),
