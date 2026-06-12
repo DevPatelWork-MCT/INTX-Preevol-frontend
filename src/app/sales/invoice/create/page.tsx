@@ -316,7 +316,7 @@ export default function CreateInvoicePage() {
         TotalAmtAfterTax: totals.afterTax,
         GrandTotalAmount: totals.grandTotal,
         RoundOff: totals.roundOff,
-        GSTReverseCharge: form.GSTReverseCharge,
+        GSTReverseCharge: form.GSTReverseCharge ? 1 : 0,
         TotalInWords: totalInWords,
         TaxInWords: taxInWords,
         Remarks: form.Remarks || null,
