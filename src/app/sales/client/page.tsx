@@ -9,12 +9,13 @@ import {
 } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { IconPlus, IconEdit, IconTrash } from "@tabler/icons-react"
+import { IconPlus, IconEdit, IconTrash, IconSearch } from "@tabler/icons-react"
 import * as React from "react"
 
 export default function SalesClientPage() {
   const { listParties, createParty, updateParty, deleteParty, loading } = usePartyApi()
   const [parties, setParties] = React.useState<any[]>([])
+  const [search, setSearch] = React.useState("")
   const [dialogOpen, setDialogOpen] = React.useState(false)
   const [editingId, setEditingId] = React.useState<number | null>(null)
   const [form, setForm] = React.useState({
@@ -27,6 +28,19 @@ export default function SalesClientPage() {
     try { const res = await listParties(); setParties(res?.data || []) } catch {}
   }, [listParties])
   React.useEffect(() => { fetchParties() }, [fetchParties])
+
+  const filtered = React.useMemo(() => {
+    if (!search.trim()) return parties
+    const q = search.toLowerCase()
+    return parties.filter(p =>
+      (p.PartyName || "").toLowerCase().includes(q) ||
+      (p.ContactPerson || "").toLowerCase().includes(q) ||
+      (p.GSTIN || "").toLowerCase().includes(q) ||
+      (p.City || "").toLowerCase().includes(q) ||
+      (p.Contact1 || "").toLowerCase().includes(q) ||
+      String(p.PartyID).includes(q)
+    )
+  }, [parties, search])
 
   const handleSave = async () => {
     if (!form.PartyName.trim()) return
@@ -89,11 +103,44 @@ export default function SalesClientPage() {
             </DialogContent>
           </Dialog>
         </div>
+
+        <div className="relative max-w-xs">
+          <IconSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search parties…" value={search} onChange={e => setSearch(e.target.value)} className="pl-8" />
+        </div>
+
         <Table>
-          <TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Party Name</TableHead><TableHead>Contact Person</TableHead><TableHead>Phone</TableHead><TableHead>GSTIN</TableHead><TableHead>City</TableHead><TableHead className="w-[150px]">Actions</TableHead></TableRow></TableHeader>
-          <TableBody>{parties.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No parties found</TableCell></TableRow> : parties.map((p) => (
-            <TableRow key={p.PartyID}><TableCell>{p.PartyID}</TableCell><TableCell>{p.PartyName}</TableCell><TableCell>{p.ContactPerson || "-"}</TableCell><TableCell>{p.Contact1 || "-"}</TableCell><TableCell>{p.GSTIN || "-"}</TableCell><TableCell>{p.City || "-"}</TableCell><TableCell><div className="flex gap-2"><Button variant="outline" size="sm" onClick={() => handleEdit(p)}><IconEdit className="h-4 w-4" /></Button><Button variant="destructive" size="sm" onClick={() => handleDelete(p.PartyID)}><IconTrash className="h-4 w-4" /></Button></div></TableCell></TableRow>
-          ))}</TableBody>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>Party Name</TableHead>
+              <TableHead>Contact Person</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>GSTIN</TableHead>
+              <TableHead>City</TableHead>
+              <TableHead className="w-[150px]">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.length === 0 ? (
+              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No parties found</TableCell></TableRow>
+            ) : filtered.map((p) => (
+              <TableRow key={p.PartyID}>
+                <TableCell>{p.PartyID}</TableCell>
+                <TableCell>{p.PartyName}</TableCell>
+                <TableCell>{p.ContactPerson || "-"}</TableCell>
+                <TableCell>{p.Contact1 || "-"}</TableCell>
+                <TableCell>{p.GSTIN || "-"}</TableCell>
+                <TableCell>{p.City || "-"}</TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(p)}><IconEdit className="h-4 w-4" /></Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(p.PartyID)}><IconTrash className="h-4 w-4" /></Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
         </Table>
       </div>
     </ProtectedLayout>

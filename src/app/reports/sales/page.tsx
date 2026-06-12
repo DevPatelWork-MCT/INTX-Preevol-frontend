@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { IconSearch, IconDownload } from "@tabler/icons-react"
+import { DatePicker } from "@/components/ui/date-picker"
 
 export default function SalesReportPage() {
   const { listInvoices } = useInvoiceApi()
@@ -64,11 +65,11 @@ export default function SalesReportPage() {
       <div className="flex flex-wrap gap-4 items-end rounded-lg border p-4">
         <Field>
           <FieldLabel>From Date</FieldLabel>
-          <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+          <DatePicker value={fromDate} onChange={v => setFromDate(v)} placeholder="From date" />
         </Field>
         <Field>
           <FieldLabel>To Date</FieldLabel>
-          <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+          <DatePicker value={toDate} onChange={v => setToDate(v)} placeholder="To date" />
         </Field>
         <Field>
           <FieldLabel>Party</FieldLabel>

@@ -23,6 +23,7 @@ import {
   IconLoader,
   IconX,
 } from "@tabler/icons-react"
+import { DatePicker } from "@/components/ui/date-picker"
 import { useFinancialApi, type FinancialYearRow } from "@/hooks/useFinancialApi"
 import type { CompanyRow } from "@/components/company-data-table"
 
@@ -215,14 +216,14 @@ export function FinancialYearDialog({
         </div>
         <div>
           <Label htmlFor={`${prefix}-start`} className="text-xs">Start Date *</Label>
-          <Input id={`${prefix}-start`} type="date" value={form.startDate} onChange={set("startDate")} className="h-8 mt-1" />
+          <DatePicker value={form.startDate} onChange={set("startDate")} placeholder="Start date" />
         </div>
       </div>
       {/* Row 2: End Date + Sales Count */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label htmlFor={`${prefix}-end`} className="text-xs">End Date *</Label>
-          <Input id={`${prefix}-end`} type="date" value={form.endDate} onChange={set("endDate")} className="h-8 mt-1" />
+          <DatePicker value={form.endDate} onChange={set("endDate")} placeholder="End date" />
         </div>
         <div>
           <Label htmlFor={`${prefix}-sales`} className="text-xs">Sales Invoice Count</Label>
