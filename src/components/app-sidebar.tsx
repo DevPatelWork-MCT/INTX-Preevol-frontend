@@ -5,7 +5,7 @@ import * as React from "react"
 import { NavMain } from "@/components/nav-main"
 import { NavProjects } from "@/components/nav-projects"
 import { NavUser } from "@/components/nav-user"
-import { CompanySwitcher } from "@/components/company-switcher"
+import { TeamSwitcher } from "@/components/team-switcher"
 import {
   Sidebar,
   SidebarContent,
@@ -13,66 +13,34 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import {
-  IconFrame,
-  IconChartPie,
-  IconMap,
-  IconChartBar,
-  IconShoppingCart,
-  IconCategory,
-  IconBox,
-  IconUserPlus,
-  IconDashboard,
-  IconFileDollar,
-  IconReport,
-} from "@tabler/icons-react"
+import { IconLayoutCollage,IconFrame, IconChartPie, IconMap, IconFileInvoice, IconChartBar, IconShoppingCart, IconCategory, IconBox, IconUserPlus } from "@tabler/icons-react"
+import { useUser } from "@/contexts/user-context"
 
 const data = {
-  user: {
-    name: "User",
-    email: "user@preevol.com",
-    avatar: "/avatars/user.jpg",
-  },
   navMain: [
     {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: <IconDashboard />,
-    },
-    {
-      title: "Quotation",
-      url: "/quotation",
-      icon: <IconFileDollar />,
-      items: [
-        { title: "Create Quotation", url: "/quotation/create" },
-        { title: "All Quotations", url: "/quotation" },
-      ],
-    },
-    {
       title: "Sales",
-      url: "/sales",
+      url: "#",
       icon: <IconChartBar />,
       items: [
-        { title: "Invoice", url: "/sales/invoice" },
         { title: "Proforma Invoice", url: "/sales/proforma-invoice" },
-        { title: "Clients", url: "/sales/client" },
-        { title: "Sales Report", url: "/reports/sales" },
+        { title: "Client", url: "/sales/client" },
+        { title: "Invoice", url: "/sales/invoice" },
+        { title: "Report", url: "/reports/sales" },
       ],
     },
     {
       title: "Purchase",
-      url: "/purchase",
+      url: "#",
       icon: <IconShoppingCart />,
       items: [
-        { title: "Vendors", url: "/purchase/vendor" },
-        { title: "Purchase Products", url: "/purchase/products" },
-        { title: "Purchase Orders", url: "/purchase/orders" },
-        { title: "Work Orders", url: "/purchase/work-orders" },
+        { title: "Vendor", url: "/purchase/vendor" },
+        { title: "Purchase Order", url: "/purchase/orders" },
       ],
     },
     {
       title: "Masters",
-      url: "/masters",
+      url: "#",
       icon: <IconCategory />,
       items: [
         { title: "Company", url: "/masters/company" },
@@ -88,35 +56,32 @@ const data = {
     },
     {
       title: "Inventory",
-      url: "/inventory",
+      url: "#",
       icon: <IconBox />,
       items: [
         { title: "Goods", url: "/inventory/goods" },
-        { title: "Stock Management", url: "/inventory/stock" },
+        { title: "Stock", url: "/inventory/stock" },
         { title: "Stock Report", url: "/reports/stock" },
       ],
     },
     {
-      title: "Reports",
-      url: "/reports",
-      icon: <IconReport />,
-      items: [
-        { title: "Sales Report", url: "/reports/sales" },
-        { title: "Service Report", url: "/reports/service" },
-        { title: "Stock Report", url: "/reports/stock" },
-      ],
-    },
-    {
-      title: "Admin",
-      url: "/admin",
+      title: "User Management",
+      url: "/admin/users",
       icon: <IconUserPlus />,
-      items: [
-        { title: "Users", url: "/admin/users" },
-        { title: "Roles", url: "/admin/roles" },
-      ],
+      items: [],
     },
   ],
   projects: [
+        {
+      name: "Dashboard",
+      url: "/dashboard",
+      icon: <IconLayoutCollage />,
+    },
+    {
+      name: "Quotation",
+      url: "/quotation",
+      icon: <IconFileInvoice />,
+    },
     {
       name: "Design Engineering",
       url: "#",
@@ -145,17 +110,29 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useUser()
+
+  const displayName = user
+    ? [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email
+    : "Guest"
+
+  const navUser = {
+    name: displayName,
+    email: user?.email || "",
+    avatar: user?.profilePicture || user?.avatar || "",
+  }
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <CompanySwitcher />
+        <TeamSwitcher />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
         <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={navUser} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

@@ -87,3 +87,49 @@ export async function fetchCurrentUser() {
   const response = await apiRequest<any>("/auth/me", { method: "GET" });
   return response;
 }
+
+/**
+ * Upload avatar image for the current user.
+ * @param file - The image file to upload
+ */
+export async function uploadAvatar(file: File): Promise<{ profilePicture: string }> {
+  const formData = new FormData();
+  formData.append("avatar", file);
+
+  const token = getAuthToken();
+  const response = await fetch(`${BASE_URL}/auth/avatar`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.message || "Failed to upload avatar");
+  }
+
+  return response.json();
+}
+
+/**
+ * Delete the current user's avatar.
+ */
+export async function deleteAvatar(): Promise<void> {
+  const token = getAuthToken();
+  const response = await fetch(`${BASE_URL}/auth/avatar`, {
+    method: "DELETE",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.message || "Failed to delete avatar");
+  }
+}

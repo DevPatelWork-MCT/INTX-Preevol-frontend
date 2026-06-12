@@ -103,7 +103,7 @@ function DashboardContent() {
               <h1 className="text-2xl font-bold">{selectedCompany?.Name || "Dashboard"}</h1>
               <p className="text-sm text-muted-foreground">Welcome, {user?.firstName || "User"} — Here&apos;s your business overview</p>
             </div>
-            <CompanySwitcher />
+    
           </div>
           <div className="px-4 lg:px-6"><SectionCards /></div>
           <div className="px-4 lg:px-6"><ChartAreaInteractive /></div>

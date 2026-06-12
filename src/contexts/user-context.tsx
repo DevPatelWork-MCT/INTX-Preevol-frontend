@@ -11,6 +11,8 @@ export interface UserInfo {
   company: string | null
   accountStatus: string
   isAdmin: boolean
+  avatar: string | null
+  profilePicture: string | null
   role: { roleId: number; roleName: string } | null
 }
 
