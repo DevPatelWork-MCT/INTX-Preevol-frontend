@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { fetchCurrentUser, clearAuthToken, apiRequest } from "@/lib/apiClient"
+import { fetchCurrentUser, clearAuthToken } from "@/lib/apiClient"
 
 export interface UserInfo {
   id: string
@@ -23,82 +23,35 @@ interface UserContextType {
 
 const UserContext = React.createContext<UserContextType | null>(null)
 
-// JWT expiry is 7 days. Refresh silently at 6 days (85% of lifetime).
-const TOKEN_REFRESH_INTERVAL_MS = 6 * 24 * 60 * 60 * 1000 // 6 days
-
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<UserInfo | null>(null)
   const [loading, setLoading] = React.useState(true)
-  const refreshTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Silent token refresh — calls /me to validate and get fresh user info.
-  // If the token is expired, the backend returns 401 and we clear the cookie.
   const refreshUser = React.useCallback(async () => {
+    setLoading(true)
     try {
       const data = await fetchCurrentUser()
       if (data) {
         setUser(data)
-        return true
       } else {
         setUser(null)
-        return false
       }
     } catch {
       setUser(null)
-      return false
     } finally {
       setLoading(false)
     }
   }, [])
 
-  // Schedule the next silent refresh
-  const scheduleNextRefresh = React.useCallback(() => {
-    if (refreshTimerRef.current) {
-      clearTimeout(refreshTimerRef.current)
-    }
-    refreshTimerRef.current = setTimeout(async () => {
-      const success = await refreshUser()
-      if (success) {
-        scheduleNextRefresh() // Keep the cycle going
-      }
-    }, TOKEN_REFRESH_INTERVAL_MS)
-  }, [refreshUser])
-
-  // Auto-login on mount + start refresh cycle
+  // Auto-login on mount
   React.useEffect(() => {
-    refreshUser().then((success) => {
-      if (success) {
-        scheduleNextRefresh()
-      }
-    })
-    return () => {
-      if (refreshTimerRef.current) {
-        clearTimeout(refreshTimerRef.current)
-      }
-    }
-  }, [refreshUser, scheduleNextRefresh])
-
-  // Also refresh when user becomes active after being idle
-  // This handles the case where the user leaves the tab open for a long time
-  React.useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        // Tab became visible again — silently check if token is still valid
-        refreshUser()
-      }
-    }
-    document.addEventListener("visibilitychange", handleVisibilityChange)
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange)
+    refreshUser()
   }, [refreshUser])
 
   const logout = React.useCallback(() => {
-    if (refreshTimerRef.current) {
-      clearTimeout(refreshTimerRef.current)
-    }
     clearAuthToken()
     setUser(null)
-    // Only redirect if not already on login page
-    if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+    if (typeof window !== "undefined") {
       window.location.href = "/login"
     }
   }, [])

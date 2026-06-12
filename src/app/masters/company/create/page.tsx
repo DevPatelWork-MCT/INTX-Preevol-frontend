@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
-import { SiteHeader } from "@/components/site-header";
+import { ProtectedLayout } from "@/components/protected-layout";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -75,16 +73,8 @@ export default function CreateCompanyPage() {
   };
 
   return (
-    <SidebarProvider
-      style={{
-        "--sidebar-width": "calc(var(--spacing) * 72)",
-        "--header-height": "calc(var(--spacing) * 12)",
-      } as React.CSSProperties}
-    >
-      <AppSidebar />
-      <SidebarInset>
-        <SiteHeader />
-        <Card className="m-4">
+    <ProtectedLayout>
+      <Card className="m-4">
           <CardHeader>
             <CardTitle className="text-xl">Create New Company</CardTitle>
           </CardHeader>
@@ -185,7 +175,6 @@ export default function CreateCompanyPage() {
             </form>
           </CardContent>
         </Card>
-      </SidebarInset>
-    </SidebarProvider>
+    </ProtectedLayout>
   );
 }

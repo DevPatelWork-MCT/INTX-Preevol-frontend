@@ -5,7 +5,7 @@ import * as React from "react"
 import { NavMain } from "@/components/nav-main"
 import { NavProjects } from "@/components/nav-projects"
 import { NavUser } from "@/components/nav-user"
-import { TeamSwitcher } from "@/components/team-switcher"
+import { CompanySwitcher } from "@/components/company-switcher"
 import {
   Sidebar,
   SidebarContent,
@@ -13,111 +13,106 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { IconLayoutRows, IconWaveSine, IconCommand, IconFrame, IconChartPie, IconMap, IconFileInvoice, IconChartBar, IconShoppingCart, IconCategory, IconBox, IconUserPlus, IconLogout } from "@tabler/icons-react"
+import {
+  IconFrame,
+  IconChartPie,
+  IconMap,
+  IconChartBar,
+  IconShoppingCart,
+  IconCategory,
+  IconBox,
+  IconUserPlus,
+  IconDashboard,
+  IconFileDollar,
+  IconReport,
+} from "@tabler/icons-react"
 
-// This is sample data.
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    name: "User",
+    email: "user@preevol.com",
+    avatar: "/avatars/user.jpg",
   },
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: (
-        <IconLayoutRows
-        />
-      ),
-      plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: (
-        <IconWaveSine
-        />
-      ),
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: (
-        <IconCommand
-        />
-      ),
-      plan: "Free",
-    },
-  ],
   navMain: [
-    // New sections added per user request
+    {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: <IconDashboard />,
+    },
     {
       title: "Quotation",
-      url: "#",
-      icon: <IconFileInvoice />, // quotation icon
-      items: [],
+      url: "/quotation",
+      icon: <IconFileDollar />,
+      items: [
+        { title: "Create Quotation", url: "/quotation/create" },
+        { title: "All Quotations", url: "/quotation" },
+      ],
     },
     {
       title: "Sales",
-      url: "#",
-      icon: <IconChartBar />, // sales icon
+      url: "/sales",
+      icon: <IconChartBar />,
       items: [
-        { title: "Profoma Invoice", url: "#" },
-        { title: "Client", url: "#" },
-        { title: "Invoice", url: "#" },
-        { title: "Report", url: "#" },
+        { title: "Invoice", url: "/sales/invoice" },
+        { title: "Proforma Invoice", url: "/sales/proforma-invoice" },
+        { title: "Clients", url: "/sales/client" },
+        { title: "Sales Report", url: "/reports/sales" },
       ],
     },
     {
       title: "Purchase",
-      url: "#",
-      icon: <IconShoppingCart />, // purchase icon
+      url: "/purchase",
+      icon: <IconShoppingCart />,
       items: [
-        { title: "Vendor", url: "#" },
-        { title: "Purchase Product", url: "#" },
-        { title: "Purchase Order", url: "#" },
-        { title: "Work Order", url: "#" },
+        { title: "Vendors", url: "/purchase/vendor" },
+        { title: "Purchase Products", url: "/purchase/products" },
+        { title: "Purchase Orders", url: "/purchase/orders" },
+        { title: "Work Orders", url: "/purchase/work-orders" },
       ],
     },
     {
       title: "Masters",
-      url: "#",
-      icon: <IconCategory />, // masters icon
+      url: "/masters",
+      icon: <IconCategory />,
       items: [
-          { title: "Category", url: "#" },
-          { title: "Sub Category", url: "#" },
-          { title: "Product", url: "#" },
-          { title: "Company", url: "/masters/company" },
-          { title: "Party", url: "/masters/party" },
-          { title: "Bank", url: "/masters/bank" },
+        { title: "Company", url: "/masters/company" },
+        { title: "Party", url: "/masters/party" },
+        { title: "Bank", url: "/masters/bank" },
+        { title: "Category", url: "/masters/category" },
+        { title: "Sub Category", url: "/masters/sub-category" },
+        { title: "Product", url: "/masters/product" },
+        { title: "Type", url: "/masters/type" },
+        { title: "Model", url: "/masters/model" },
+        { title: "Plunger Diameter", url: "/masters/plunger-diameter" },
       ],
     },
     {
       title: "Inventory",
-      url: "#",
-      icon: <IconBox />, // inventory icon
+      url: "/inventory",
+      icon: <IconBox />,
       items: [
-        { title: "Type", url: "#" },
-        { title: "Model", url: "#" },
-        { title: "Plunger Diameter", url: "#" },
-        { title: "Goods", url: "#" },
-        { title: "Inventory", url: "#" },
-        { title: "Stock Report", url: "#" },
+        { title: "Goods", url: "/inventory/goods" },
+        { title: "Stock Management", url: "/inventory/stock" },
+        { title: "Stock Report", url: "/reports/stock" },
       ],
     },
     {
-      title: "User Create",
-      url: "#",
-      icon: <IconUserPlus />, // user create icon
-      items: [],
+      title: "Reports",
+      url: "/reports",
+      icon: <IconReport />,
+      items: [
+        { title: "Sales Report", url: "/reports/sales" },
+        { title: "Service Report", url: "/reports/service" },
+        { title: "Stock Report", url: "/reports/stock" },
+      ],
     },
     {
-      title: "Close",
-      url: "#",
-      icon: <IconLogout />, // close icon
+      title: "Admin",
+      url: "/admin",
+      icon: <IconUserPlus />,
       items: [
-        { title: "Change Company", url: "#" },
-        { title: "Backup", url: "#" },
-        { title: "Exit", url: "#" },
+        { title: "Users", url: "/admin/users" },
+        { title: "Roles", url: "/admin/roles" },
       ],
     },
   ],
@@ -153,7 +148,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <CompanySwitcher />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />

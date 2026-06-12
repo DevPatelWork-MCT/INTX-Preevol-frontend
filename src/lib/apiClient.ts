@@ -69,3 +69,21 @@ export async function apiRequest<T>(
 
   return (await response.json()) as T;
 }
+
+/**
+ * Clear the stored auth token (logout).
+ */
+export function clearAuthToken() {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("authToken");
+    document.cookie = "authToken=; path=/; max-age=0";
+  }
+}
+
+/**
+ * Fetch the current authenticated user profile.
+ */
+export async function fetchCurrentUser() {
+  const response = await apiRequest<any>("/auth/me", { method: "GET" });
+  return response;
+}
