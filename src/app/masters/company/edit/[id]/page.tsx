@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { ProtectedLayout } from "@/components/protected-layout";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,15 @@ import {
   FieldLegend,
   FieldDescription,
 } from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useCompanyApi } from "@/hooks/useCompanyApi";
+import { useFinancialApi, type FinancialYearRow } from "@/hooks/useFinancialApi";
 import { toast } from "sonner";
 
 // ── Email regex matching VB.NET pattern ───────────────────────────
@@ -98,15 +106,90 @@ const emptyForm: CompanyFormState = {
   SignatureImage: "",
 };
 
-export default function CreateCompanyPage() {
+export default function EditCompanyPage() {
   const router = useRouter();
-  const { createCompany } = useCompanyApi();
+  const params = useParams();
+  const companyId = String(params.id);
+  const { getCompany, updateCompany } = useCompanyApi();
+  const { listFinancialYears } = useFinancialApi();
 
   const [form, setForm] = useState<CompanyFormState>(emptyForm);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  // Financial years are loaded on the edit page; for create, user enters FY manually
+  const [financialYears, setFinancialYears] = useState<FinancialYearRow[]>([]);
+  const [companyExists, setCompanyExists] = useState(false);
+
+  // ── Load company data on mount ─────────────────────────────────
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getCompany(companyId)
+      .then((res) => {
+        if (cancelled) return;
+        const data = res?.data ?? res;
+        if (data) {
+          setCompanyExists(true);
+          setForm({
+            Name: data.Name ?? "",
+            Address: data.Address ?? "",
+            GSTIN: data.GSTIN ?? "",
+            PANNo: data.PANNo ?? "",
+            Phone1: data.Phone1 ?? "",
+            Phone2: data.Phone2 ?? "",
+            state: data.state ?? "",
+            Statecode: data.Statecode != null ? String(data.Statecode) : "",
+            EmailID1: data.EmailID1 ?? "",
+            EmailID2: data.EmailID2 ?? "",
+            Website: data.Website ?? "",
+            VATno: data.VATno != null ? String(data.VATno) : "",
+            CSTNo: data.CSTNo != null ? String(data.CSTNo) : "",
+            ECCNo: data.ECCNo ?? "",
+            IECCode: data.IECCode ?? "",
+            SupplyFrom: data.SupplyFrom ?? "",
+            FinancialYear: data.FinancialYear ?? "",
+            StartDate: data.StartDate ? String(data.StartDate).slice(0, 10) : "",
+            EndDate: data.EndDate ? String(data.EndDate).slice(0, 10) : "",
+            SalesInvoiceStarts: data.SalesInvoiceStarts ?? "",
+            ServiceInvoiceStarts: data.ServiceInvoiceStarts ?? "",
+            ProformaSalesInvoiceStarts: data.ProformaSalesInvoiceStarts ?? "",
+            ProformaServiceInvoiceStarts: data.ProformaServiceInvoiceStarts ?? "",
+            SalesInvoicePrefix: data.SalesInvoicePrefix ?? "",
+            ServiceInvoicePrefix: data.ServiceInvoicePrefix ?? "",
+            ProformaSalesInvoicePrefix: data.ProformaSalesInvoicePrefix ?? "",
+            ProformaServiceInvoicePrefix: data.ProformaServiceInvoicePrefix ?? "",
+            QuotationStarts: data.QuotationStarts ?? "",
+            QuotationPrefix: data.QuotationPrefix ?? "",
+            ProposalStarts: data.ProposalStarts ?? "",
+            ProposalPrefix: data.ProposalPrefix ?? "",
+            ISOText: data.ISOText ?? "",
+            Loc: data.Loc ?? "",
+            Pin: data.Pin ?? "",
+            SignatureImage: data.SignatureImage ?? "",
+          });
+
+          // Load financial years for this company
+          const cId = data.CompanyID ?? Number(companyId);
+          listFinancialYears(cId)
+            .then((fyRes) => {
+              if (cancelled) return;
+              const fyData = Array.isArray(fyRes?.data) ? fyRes.data : [];
+              setFinancialYears(fyData);
+            })
+            .catch(() => {});
+        }
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        const message = err instanceof Error ? err.message : "Failed to load company";
+        setApiError(message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true };
+  }, [companyId, getCompany, listFinancialYears]);
 
   // ── Handle form field changes ──────────────────────────────────
   const handleChange = (field: keyof CompanyFormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,6 +201,29 @@ export default function CreateCompanyPage() {
       return next;
     });
   };
+
+  // ── Financial Year selection change → auto-fill (VB.NET behavior) ──
+  const handleFinancialYearChange = useCallback((fyLabel: string) => {
+    setForm((prev) => ({ ...prev, FinancialYear: fyLabel }));
+
+    // Find the matching financial year record
+    const fy = financialYears.find((f) => f.FinancialYear === fyLabel);
+    if (fy) {
+      // Auto-fill dates and invoice counters from FinancialSettings
+      setForm((prev) => ({
+        ...prev,
+        FinancialYear: fyLabel,
+        StartDate: fy.StartDate ? String(fy.StartDate).slice(0, 10) : prev.StartDate,
+        EndDate: fy.EndDate ? String(fy.EndDate).slice(0, 10) : prev.EndDate,
+        SalesInvoiceStarts: fy.SalesInvoiceCount ?? prev.SalesInvoiceStarts,
+        ServiceInvoiceStarts: fy.ServiceInvoiceCount ?? prev.ServiceInvoiceStarts,
+        ProformaSalesInvoiceStarts: fy.ProformaSalesInvoiceCount ?? prev.ProformaSalesInvoiceStarts,
+        ProformaServiceInvoiceStarts: fy.ProformaServiceInvoiceCount ?? prev.ProformaServiceInvoiceStarts,
+        QuotationStarts: fy.QuotationCount ?? prev.QuotationStarts,
+        ProposalStarts: fy.ProposalCount ?? prev.ProposalStarts,
+      }));
+    }
+  }, [financialYears]);
 
   // ── Field-level validations (matching VB.NET) ──────────────────
   const validateField = (field: string, value: string): string | null => {
@@ -227,21 +333,43 @@ export default function CreateCompanyPage() {
       if (form.ProposalStarts) payload.ProposalStarts = form.ProposalStarts;
       if (form.ProposalPrefix) payload.ProposalPrefix = form.ProposalPrefix;
 
-      await createCompany(payload);
-      toast.success("Company created successfully");
+      await updateCompany(companyId, payload);
+      toast.success("Company updated successfully");
       router.push("/masters/company");
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error(err);
-      const message = err instanceof Error ? err.message : String(err);
       // Handle duplicate name error from backend
-      if (message.includes("Value Exist") || message.includes("unique")) {
+      if (err?.message?.includes("Value Exist") || err?.message?.includes("unique")) {
         setFieldErrors((prev) => ({ ...prev, Name: "Value Exist! Enter Unique Value." }));
       }
-      setApiError(message ?? "An unexpected error occurred");
+      setApiError(err.message ?? "An unexpected error occurred");
     } finally {
       setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <ProtectedLayout>
+        <div className="flex items-center justify-center py-20">
+          <p className="text-muted-foreground">Loading company data…</p>
+        </div>
+      </ProtectedLayout>
+    );
+  }
+
+  if (!companyExists && !loading) {
+    return (
+      <ProtectedLayout>
+        <div className="flex items-center justify-center py-20">
+          <Alert variant="destructive" className="max-w-md">
+            <AlertTitle>Not Found</AlertTitle>
+            <AlertDescription>Company not found.</AlertDescription>
+          </Alert>
+        </div>
+      </ProtectedLayout>
+    );
+  }
 
   const fieldError = (field: string) => fieldErrors[field] ? (
     <p className="text-xs text-destructive mt-1">{fieldErrors[field]}</p>
@@ -251,7 +379,7 @@ export default function CreateCompanyPage() {
     <ProtectedLayout>
       <Card className="m-4">
         <CardHeader>
-          <CardTitle className="text-xl">Create New Company</CardTitle>
+          <CardTitle className="text-xl">Edit Company</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="space-y-6" onSubmit={handleSubmit}>
@@ -363,12 +491,24 @@ export default function CreateCompanyPage() {
             <FieldSet>
               <FieldLegend>Financial Year</FieldLegend>
               <FieldDescription>
-                Enter the financial year label (e.g., &quot;24-25&quot;) and dates manually for a new company.
+                Select a financial year to auto-fill dates and invoice counters. Select &quot;-- Custom --&quot; to enter manually.
               </FieldDescription>
               <FieldGroup className="@container/field-group grid gap-4 md:grid-cols-3 mt-2">
                 <Field>
                   <FieldLabel htmlFor="FinancialYear">Financial Year *</FieldLabel>
-                  <Input id="FinancialYear" required placeholder="e.g., 24-25" value={form.FinancialYear} onChange={handleChange("FinancialYear")} />
+                  <Select value={form.FinancialYear} onValueChange={handleFinancialYearChange}>
+                    <SelectTrigger id="FinancialYear">
+                      <SelectValue placeholder="Select Financial Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__custom__">-- Custom --</SelectItem>
+                      {financialYears.map((fy) => (
+                        <SelectItem key={fy.FinancialYearID} value={fy.FinancialYear}>
+                          {fy.FinancialYear}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {fieldError("FinancialYear")}
                 </Field>
                 <Field>
@@ -476,7 +616,7 @@ export default function CreateCompanyPage() {
                 Cancel
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? "Creating…" : "Create"}
+                {saving ? "Saving…" : "Save Changes"}
               </Button>
             </div>
           </form>

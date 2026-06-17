@@ -13,14 +13,14 @@ export interface CompanyListResponse<T = unknown> {
 
 /**
  * Hook for Company related API calls.
- * Adjust the endpoint paths to match your backend routes.
+ * Matches backend routes: /company/* 
  */
 export function useCompanyApi() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const handleRequest = useCallback(
-    async <T>(path: string, options?: RequestInit) => {
+    async <T>(path: string, options?: RequestInit): Promise<T> => {
       setLoading(true);
       setError(null);
       try {
@@ -29,8 +29,9 @@ export function useCompanyApi() {
         return data;
       } catch (err) {
         setLoading(false);
-        setError(err as Error);
-        throw err;
+        const error = err instanceof Error ? err : new Error(String(err));
+        setError(error);
+        throw error;
       }
     },
     []
@@ -51,7 +52,7 @@ export function useCompanyApi() {
   );
 
   const getCompany = useCallback(
-    (id: string) => handleRequest<any>(`/company/${id}`, { method: "GET" }),
+    (id: string | number) => handleRequest<any>(`/company/${id}?includeFinancialYears=true`, { method: "GET" }),
     [handleRequest]
   );
 
@@ -62,13 +63,13 @@ export function useCompanyApi() {
   );
 
   const updateCompany = useCallback(
-    (id: string, payload: any) =>
+    (id: string | number, payload: any) =>
       handleRequest<any>(`/company/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
     [handleRequest]
   );
 
   const deleteCompany = useCallback(
-    (id: string) => handleRequest<any>(`/company/${id}`, { method: "DELETE" }),
+    (id: string | number) => handleRequest<any>(`/company/${id}`, { method: "DELETE" }),
     [handleRequest]
   );
 

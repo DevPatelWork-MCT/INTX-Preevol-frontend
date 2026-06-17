@@ -31,8 +31,8 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
     setLoading(true)
     listCompanies({ page: 1, limit: 100 })
       .then((res) => {
-        const rows = Array.isArray(res?.data) ? res.data : []
-        const mapped: SelectedCompany[] = rows.map((c: any) => ({
+        const rows: SelectedCompany[] = Array.isArray(res?.data) ? res.data as SelectedCompany[] : []
+        const mapped: SelectedCompany[] = rows.map((c) => ({
           CompanyID: c.CompanyID,
           Name: c.Name,
         }))
@@ -59,7 +59,10 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setLoading(false))
   }, [listCompanies])
 
+  const fetchedRef = React.useRef(false)
   React.useEffect(() => {
+    if (fetchedRef.current) return
+    fetchedRef.current = true
     fetchCompanies()
   }, [fetchCompanies])
 
@@ -77,6 +80,16 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
 
 export function useCompany() {
   const ctx = React.useContext(CompanyContext)
-  if (!ctx) throw new Error("useCompany must be used within CompanyProvider")
+  if (!ctx) {
+    // Return a safe default so pages don't crash if rendered outside CompanyProvider
+    // (e.g. during SSR or initial hydration before provider mounts)
+    return {
+      selectedCompany: null,
+      companies: [],
+      loading: false,
+      selectCompany: () => {},
+      refreshCompanies: () => {},
+    }
+  }
   return ctx
 }
