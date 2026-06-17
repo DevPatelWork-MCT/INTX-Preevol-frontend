@@ -26,12 +26,12 @@ export function useAuthApi() {
   );
 
   const signIn = useCallback(
-    async (payload: { email: string; password: string }) => {
+    async (payload: { email: string; password: string; companyId: number }) => {
       const response = await handleRequest<any>("/auth/sign-in", {
         method: "POST",
         body: JSON.stringify(payload),
       });
-      // Backend returns { message, data: { token, expiresAt } }
+      // Backend returns { message, data: { token, companyId, companyName, expiresAt } }
       if (response && typeof response === "object" && response.data && "token" in response.data) {
         setAuthToken(response.data.token);
       }

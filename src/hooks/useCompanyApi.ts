@@ -62,6 +62,17 @@ export function useCompanyApi() {
     [handleRequest]
   );
 
+  // Create multiple companies in parallel. Each payload should conform to the backend's company creation schema.
+  // Returns a promise that resolves when all creations succeed. Errors from any request will reject the whole promise.
+  const createMultipleCompanies = useCallback(
+    (payloads: any[]) => {
+      // Map each payload to a createCompany call and run them concurrently.
+      const promises = payloads.map((p) => createCompany(p));
+      return Promise.all(promises);
+    },
+    [createCompany]
+  );
+
   const updateCompany = useCallback(
     (id: string | number, payload: any) =>
       handleRequest<any>(`/company/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
@@ -73,5 +84,15 @@ export function useCompanyApi() {
     [handleRequest]
   );
 
-  return { loading, error, listCompanies, getCompany, createCompany, updateCompany, deleteCompany };
+  // Expose all API functions, including the new batch creation helper.
+  return {
+    loading,
+    error,
+    listCompanies,
+    getCompany,
+    createCompany,
+    updateCompany,
+    deleteCompany,
+    createMultipleCompanies,
+  };
 }

@@ -9,22 +9,60 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { useAuthApi } from "@/hooks/useAuthApi"
+import { useCompanyApi } from "@/hooks/useCompanyApi"
 import { useRouter } from "next/navigation"
+import * as React from "react"
+
+interface CompanyOption {
+  CompanyID: number
+  Name: string
+}
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
   const { signIn, loading, error } = useAuthApi()
+  const { listCompanies } = useCompanyApi()
   const router = useRouter()
+  const [companies, setCompanies] = React.useState<CompanyOption[]>([])
+  const [selectedCompanyId, setSelectedCompanyId] = React.useState<number | "">("")
+  const [companyError, setCompanyError] = React.useState<string>("")
+  const [companiesLoading, setCompaniesLoading] = React.useState(true)
+
+  // Fetch companies on mount (login page is outside CompanyProvider)
+  React.useEffect(() => {
+    setCompaniesLoading(true)
+    listCompanies({ page: 1, limit: 100 })
+      .then((res) => {
+        const rows: CompanyOption[] = Array.isArray(res?.data) ? res.data as CompanyOption[] : []
+        setCompanies(rows)
+        if (rows.length > 0) {
+          setSelectedCompanyId(rows[0].CompanyID)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setCompaniesLoading(false))
+  }, [listCompanies])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
     const email = formData.get("email") as string
     const password = formData.get("password") as string
+
+    if (!selectedCompanyId) {
+      setCompanyError("Please select a company")
+      return
+    }
+    setCompanyError("")
+
     try {
-      await signIn({ email, password })
+      const response = await signIn({ email, password, companyId: selectedCompanyId as number })
+      // Store selected company in localStorage so CompanyContext can pick it up
+      if (response?.data?.companyId) {
+        localStorage.setItem("selectedCompanyId", String(response.data.companyId))
+      }
       // Redirect to dashboard after successful login
       router.push('/dashboard')
     } catch (err) {
@@ -38,7 +76,7 @@ export function LoginForm({
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Login to your account</h1>
           <p className="text-sm text-balance text-muted-foreground">
-            Enter your email below to login to your account
+            Enter your email and select a company to login
           </p>
         </div>
         <Field>
@@ -71,7 +109,34 @@ export function LoginForm({
           />
         </Field>
         <Field>
-          <Button type="submit" disabled={loading}>
+          <FieldLabel htmlFor="company">Company</FieldLabel>
+          <select
+            id="company"
+            name="company"
+            value={selectedCompanyId}
+            onChange={(e) => setSelectedCompanyId(Number(e.target.value))}
+            disabled={companiesLoading}
+            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            required
+          >
+            {companiesLoading ? (
+              <option value="">Loading companies...</option>
+            ) : companies.length === 0 ? (
+              <option value="">No companies available</option>
+            ) : (
+              companies.map((c) => (
+                <option key={c.CompanyID} value={c.CompanyID}>
+                  {c.Name}
+                </option>
+              ))
+            )}
+          </select>
+          {companyError && (
+            <p className="text-sm text-destructive mt-1">{companyError}</p>
+          )}
+        </Field>
+        <Field>
+          <Button type="submit" disabled={loading || companiesLoading}>
             {loading ? "Logging in..." : "Login"}
           </Button>
           {error && (
